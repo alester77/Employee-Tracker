@@ -1,5 +1,4 @@
 const express = require('express');
-// Import and require mysql2
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 
@@ -42,30 +41,30 @@ const mainMenu = async () => {
 
   switch (response.action) {
     case 'View all departments':
-      // Handle viewing all departments
+      await viewAllDepartments();
       break;
     case 'View all roles':
-      // Handle viewing all roles
+      await viewAllRoles();
       break;
     case 'View all employees':
-      // Handle viewing all employees
+      await viewAllEmployees();
       break;
     case 'Add a department':
-      // Handle adding a department
+      await addDepartment();
       break;
     case 'Add a role':
-      // Handle adding a role
+      await addRole();
       break;
     case 'Add an employee':
-      // Handle adding an employee
+      await addEmployee();
       break;
     case 'Update an employee role':
-      // Handle updating an employee role
+      await updateEmployeeRole();
       break;
     case 'Exit':
-      // Handle exit
       process.exit();
       break;
+  }
   }
 };
 
