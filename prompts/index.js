@@ -29,7 +29,7 @@ function addDepartmentPrompt() {
   });
 }
 
-function addRolePrompt(departments) {
+function addRolePrompt(department) {
   return inquirer.prompt([
     {
       type: 'input',
@@ -41,18 +41,28 @@ function addRolePrompt(departments) {
       type: 'input',
       name: 'roleSalary',
       message: 'Enter the salary of the new role:',
-      validate: input => input ? true : 'Role salary cannot be empty.'
+      validate: input => {
+        if(!input) {
+          return 'Role salary cannot be empty.';
+        }
+        const number = parseFloat(input);
+        if(isNaN(number)) {
+          return 'Role salary must be a valid number.';
+        }
+        return true;
+      },
+      filter: input => parseFloat(input) // Convert the input string to a float
     },
     {
       type: 'list',
       name: 'roleDepartment',
       message: 'Select the department of the new role:',
-      choices: departments
+      choices: department.map(dept => ({ name: dept.name, value: dept.id }))
     }
   ]);
 }
 
-function addEmployeePrompt(roles, managers) {
+function addEmployeePrompt(role, managers) {
   return inquirer.prompt([
     {
       type: 'input',
@@ -70,7 +80,7 @@ function addEmployeePrompt(roles, managers) {
       type: 'list',
       name: 'employeeRole',
       message: 'Select the role of the new employee:',
-      choices: roles
+      choices: role.map(role => ({ name: role.title, value: role.id }))
     },
     {
       type: 'list',
@@ -81,7 +91,7 @@ function addEmployeePrompt(roles, managers) {
   ]);
 }
 
-function updateEmployeeRolePrompt(employees, roles) {
+function updateEmployeeRolePrompt(employees, role) {
   return inquirer.prompt([
     {
       type: 'list',
@@ -93,7 +103,7 @@ function updateEmployeeRolePrompt(employees, roles) {
       type: 'list',
       name: 'newRole',
       message: 'Select the new role of the employee:',
-      choices: roles
+      choices: role.map(role => ({ name: role.title, value: role.id }))
     }
   ]);
 }
