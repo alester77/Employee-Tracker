@@ -1,71 +1,98 @@
-const express = require('express');
-const mysql = require('mysql2');
-const inquirer = require('inquirer');
+const connection = require("./config/connection");
+const sqlQueries = require("./db/sqlQueries");
+const {
+  mainPrompt,
+  addDepartmentPrompt,
+  addRolePrompt,
+  addEmployeePrompt,
+  updateEmployeeRolePrompt,
+} = require("./prompts");
 
-const PORT = process.env.PORT || 3001;
-const app = express();
+async function init() {
+  let inProgress = true;
 
-// Express middleware
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+  while (inProgress) {
+    const { action } = await mainPrompt();
 
-// Connect to database
-const db = mysql.createConnection(
-  {
-    host: 'localhost',
-    user: 'root',
-    password: 'Coke26!!',
-    database: 'employee_db'
-  },
-  console.log(`Connected to the employee_db.`)
-);
+    // 'View all departments',
+    switch (action) {
+      case "View all departments":
+        connection.query(sqlQueries.viewAllDepartments, (err, res) => {
+          if (err) throw err;
+          console.table(res);
+        });
+        break;
+        
+      // 'View all roles',
+      case "View all roles":
+        connection.query(sqlQueries.viewAllRoles, (err, res) => {
+          if (err) throw err;
+          console.table(res);
+        });
+        break;
 
-module.exports = db;
+      // 'View all employees',
+      case "View all employees":
+        connection.query(sqlQueries.viewAllEmployees, (err, res) => {
+          if (err) throw err;
+          console.table(res);
+        });
+        break;
 
-const mainMenu = async () => {
-  const response = await inquirer.prompt({
-    type: 'select',
-    name: 'action',
-    message: 'What would you like to do?',
-    choices: [
-      'View all departments',
-      'View all roles',
-      'View all employees',
-      'Add a department',
-      'Add a role',
-      'Add an employee',
-      'Update an employee role',
-      'Exit'
-    ]
-  });
+      // 'Add a department',
+      case "Add a department":
+        const { departmentName } = await addDepartmentPrompt();
+        connection.query(
+          sqlQueries.addDepartment,
+          departmentName,
+          (err, res) => {
+            if (err) throw err;
+            console.log("Department added successfully!");
+          }
+        );
 
-  switch (response.action) {
-    case 'View all departments':
-      await viewAllDepartments();
-      break;
-    case 'View all roles':
-      await viewAllRoles();
-      break;
-    case 'View all employees':
-      await viewAllEmployees();
-      break;
-    case 'Add a department':
-      await addDepartment();
-      break;
-    case 'Add a role':
-      await addRole();
-      break;
-    case 'Add an employee':
-      await addEmployee();
-      break;
-    case 'Update an employee role':
-      await updateEmployeeRole();
-      break;
-    case 'Exit':
-      process.exit();
-      break;
+      // 'Add a role',
+      case "Add a role":
+        const { title, salary, department_id } = await addRolePrompt();
+        connection.query(
+          sqlQueries.addRole,
+          [title, salary, department_id],
+          (err, res) => {
+            if (err) throw err;
+            console.log("Role added successfully!");
+          }
+        );
+        break;
+
+      // 'Add an employee',
+      case "Add an employee":
+        const { first_name, last_name, role_id, manager_id } =
+          await addEmployeePrompt();
+        connection.query(
+          sqlQueries.addEmployee,
+          [first_name, last_name, role_id, manager_id],
+          (err, res) => {
+            if (err) throw err;
+            console.log("Employee added successfully!");
+          });
+        break;
+
+      // 'Update an employee role',
+      case "Update an employee role":
+        const { employee_id, new_role_id } = await updateEmployeeRolePrompt();
+        connection.query(sqlQueries.updateEmployeeRole, [new_role_id, employee_id], (err, res) => {
+          if (err) throw err;
+          console.log("Employee role updated successfully!");
+        });
+        break;
+      // 'Exit'
+
+      //end of switch statement
+      case "Exit":
+        inProgress = false;
+        connection.end();
+        break;
+    }
   }
-  }
-};
-
-mainMenu();
+}
+init();
