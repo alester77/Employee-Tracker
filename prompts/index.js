@@ -20,6 +20,7 @@ function mainPrompt() {
   ]);
 }
 
+//DONE
 function addDepartmentPrompt() {
   return inquirer.prompt({
       type: 'input',
@@ -41,28 +42,18 @@ function addRolePrompt(department) {
       type: 'input',
       name: 'roleSalary',
       message: 'Enter the salary of the new role:',
-      validate: input => {
-        if(!input) {
-          return 'Role salary cannot be empty.';
-        }
-        const number = parseFloat(input);
-        if(isNaN(number)) {
-          return 'Role salary must be a valid number.';
-        }
-        return true;
-      },
-      filter: input => parseFloat(input) // Convert the input string to a float
+      validate: input => input ? true : 'Role salary cannot be empty.'
     },
     {
-      type: 'list',
+      type: 'input',
       name: 'roleDepartment',
       message: 'Select the department of the new role:',
-      choices: department.map(dept => ({ name: dept.name, value: dept.id }))
+      validate: input => input ? true : 'Role department cannot be empty.'
     }
   ]);
 }
 
-function addEmployeePrompt(role, managers) {
+function addEmployeePrompt(roles, managers) {
   return inquirer.prompt([
     {
       type: 'input',
@@ -77,33 +68,29 @@ function addEmployeePrompt(role, managers) {
       validate: input => input ? true : 'Employee last name cannot be empty.'
     },
     {
-      type: 'list',
+      type: 'input',
       name: 'employeeRole',
-      message: 'Select the role of the new employee:',
-      choices: role.map(role => ({ name: role.title, value: role.id }))
+      message: 'Select the role of the new employee, enter number only:',
     },
     {
-      type: 'list',
+      type: 'input',
       name: 'employeeManager',
-      message: 'Select the manager of the new employee:',
-      choices: [...managers, 'None']
+      message: 'Select the manager of the new employee, input only the number:',
     }
   ]);
 }
 
-function updateEmployeeRolePrompt(employees, role) {
+function updateEmployeeRolePrompt() {
   return inquirer.prompt([
     {
-      type: 'list',
+      type: 'input',
       name: 'employee',
       message: 'Select the employee to update:',
-      choices: employees
     },
     {
-      type: 'list',
+      type: 'input',
       name: 'newRole',
       message: 'Select the new role of the employee:',
-      choices: role.map(role => ({ name: role.title, value: role.id }))
     }
   ]);
 }
@@ -115,5 +102,6 @@ module.exports = {
   addDepartmentPrompt,
   addRolePrompt,
   addEmployeePrompt,
-  updateEmployeeRolePrompt
+  updateEmployeeRolePrompt,
+
 };

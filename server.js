@@ -8,91 +8,83 @@ const {
   updateEmployeeRolePrompt,
 } = require("./prompts");
 
+function queryAsync(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    connection.query(sql, params, (err, res) => {
+      if (err) reject(err);
+      resolve(res);
+    });
+  });
+}
+
 async function init() {
   const { action } = await mainPrompt();
 
-
-  // 'View all departments',
   switch (action) {
     case "View all departments":
-      connection.query(sqlQueries.viewAllDepartments, (err, res) => {
-        if (err) throw err;
-        console.table(res);
-      });
+      const departments = await queryAsync(sqlQueries.viewAllDepartments);
+      console.table(departments);
       break;
 
-    // 'View all roles',
     case "View all roles":
-      connection.query(sqlQueries.viewAllRoles, (err, res) => {
-        if (err) throw err;
-        console.table(res);
-      });
+      const roles = await queryAsync(sqlQueries.viewAllRoles);
+      console.table(roles);
       break;
 
-    // 'View all employees',
     case "View all employees":
-      connection.query(sqlQueries.viewAllEmployees, (err, res) => {
-        if (err) throw err;
-        console.table(res);
-      });
+      const employees = await queryAsync(sqlQueries.viewAllEmployees);
+      console.table(employees);
       break;
 
-    // 'Add a department',
     case "Add a department":
       const { departmentName } = await addDepartmentPrompt();
-      connection.query(sqlQueries.addDepartment, departmentName, (err, res) => {
-        if (err) throw err;
-        console.log("Department added successfully!");
-      });
+      await queryAsync(sqlQueries.addDepartment, [departmentName]);
+      console.log("Department added successfully!");
+      break;
 
-    // 'Add a role',
     case "Add a role":
-      const { title, salary, department_id } = await addRolePrompt(departments);
-      connection.query(
-        sqlQueries.addRole,
-        [title, salary, department_id],
-        (err, res) => {
-          if (err) throw err;
-          console.log("Role added successfully!");
-        }
-      );
+      const { roleTitle: title, roleSalary: salary, roleDepartment: department_id } = await addRolePrompt();
+      await queryAsync(sqlQueries.addRole, [title, salary, department_id]);
+      console.log("Role added successfully!");
       break;
 
-    // 'Add an employee',
-    case "Add an employee":
-      const { first_name, last_name, role_id, manager_id } =
-        await addEmployeePrompt();
-      connection.query(
-        sqlQueries.addEmployee,
-        [first_name, last_name, role_id, manager_id],
-        (err, res) => {
-          if (err) throw err;
-          console.log("Employee added successfully!");
+      case "Add an employee":
+        try {
+            const { 
+                employeeFirstName: first_name, 
+                employeeLastName: last_name, 
+                employeeRole: role_id, 
+                employeeManager: manager_id 
+            } = await addEmployeePrompt();
+    
+            // Add the new employee to the database
+            await queryAsync(sqlQueries.addEmployee, [first_name, last_name, role_id, manager_id]);
+    
+            console.log("Employee added successfully!");
+    
+        } catch (error) {
+            console.error('Error:', error.message);
         }
-      );
-      break;
+        break;
 
-    // 'Update an employee role',
+
+      
     case "Update an employee role":
-      const { employee_id, new_role_id } = await updateEmployeeRolePrompt();
-      connection.query(
-        sqlQueries.updateEmployeeRole,
-        [new_role_id, employee_id],
-        (err, res) => {
-          if (err) throw err;
-          console.log("Employee role updated successfully!");
-        }
-      );
+      const { employee: employee_id, newRole: new_role_id } = await updateEmployeeRolePrompt();
+      await queryAsync(sqlQueries.updateEmployeeRole, [new_role_id, employee_id]);
+      console.log("Employee role updated successfully!");
       break;
-    // 'Exit'
 
-    //end of switch statement
     case "Exit":
-      inProgress = false;
       connection.end();
       return;
   }
+
   await init();
+
+  
 }
+
+
 
 init();
